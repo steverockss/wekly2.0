@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "493204678814",
+    "firebase_url": "https://wekly-e7628.firebaseio.com",
+    "project_id": "wekly-e7628",
+    "storage_bucket": "wekly-e7628.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:493204678814:android:93c8b27d53d4c71abcb38f",
+        "android_client_info": {
+          "package_name": "com.wekly"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "493204678814-mienpfg3rf66oka6mj07ha3emn5jg35k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wekly",
+            "certificate_hash": "9d0bbbf650a8d881fe40d66d0b807ac9c28026c5"
+          }
+        },
+        {
+          "client_id": "493204678814-govbbfm7ksnpa3nv5cmhsmdq3mcufnjf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBfzUcaQ8JD5vVpao5UeikxFM5OT0-l-z0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "493204678814-govbbfm7ksnpa3nv5cmhsmdq3mcufnjf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

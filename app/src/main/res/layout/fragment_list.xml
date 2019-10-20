@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1a1a1a">
+<LinearLayout
+    android:id="@+id/filter_layout"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    >
+
+    <RadioGroup
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:textColor="@color/colorWhite"
+        >
+
+        <RadioButton
+            android:id="@+id/all_rb"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="Todos"
+            android:buttonTint="@color/colorWhite"
+            android:textSize="12sp"
+            android:textColor="@color/colorWhite"/>
+
+        <RadioButton
+            android:id="@+id/women_rb"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:buttonTint="@color/colorWhite"
+            android:text="Mujeres"
+            android:textSize="12sp"
+            android:textColor="@color/colorWhite"
+            />
+
+        <RadioButton
+            android:id="@+id/men_rb"
+            android:layout_width="wrap_content"
+            android:buttonTint="@color/colorWhite"
+            android:layout_height="48dp"
+            android:text="Hombres"
+            android:textSize="12sp"
+            android:textColor="@color/colorWhite"/>
+
+        <RadioButton
+            android:id="@+id/trans_rb"
+            android:layout_width="wrap_content"
+            android:buttonTint="@color/colorWhite"
+            android:layout_height="48dp"
+            android:text="Trans"
+            android:textSize="12sp"
+            android:textColor="@color/colorWhite"/>
+    </RadioGroup>
+
+    <Button
+        android:layout_marginTop="10dp"
+        android:id="@+id/button_apply_filter"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:layout_marginLeft="20dp"
+        android:layout_weight="1"
+        android:background="@drawable/show_style"
+        android:padding="5dp"
+        android:text="Mostrar"
+        android:textColor="@color/colorWhite" />
+
+</LinearLayout>
+    <androidx.recyclerview.widget.RecyclerView
+        android:layout_below="@+id/filter_layout"
+        android:id="@+id/recyclerview_id"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+
+</RelativeLayout >

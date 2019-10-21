@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "493204678814-lit15fa324if9rigsaa86sipbv97hvjq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wekly",
+            "certificate_hash": "b0dc4a3f14ebcd741bec2879819a19a329740916"
+          }
+        },
+        {
           "client_id": "493204678814-mienpfg3rf66oka6mj07ha3emn5jg35k.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

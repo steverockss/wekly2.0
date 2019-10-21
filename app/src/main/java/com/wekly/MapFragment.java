@@ -1,6 +1,7 @@
 package com.wekly;
 
 import android.Manifest;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -28,6 +29,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import de.hdodenhof.circleimageview.CircleImageView;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.error.VolleyError;
@@ -35,6 +37,7 @@ import com.android.volley.request.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -51,12 +54,17 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.squareup.picasso.Picasso;
 import com.wekly.Model.Escort;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,12 +80,15 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleM
     private static final int DEFAULT_ZOOM = 15;
     protected Location lastLocation = new Location("watever");
     public Context context = getActivity();
+    TextView dialog_escort_name, dialog_escort_price, dialog_escort_description ;
+    CircleImageView dialog_escort_pic;
     private EditText mSearch;
     private String uInput;
     private RequestQueue requestQueue;
     public double lat = 0;
     public double lng = 0;
     public String dir = "";
+    Dialog mDialog;
 
     @Nullable
     @Override
@@ -113,11 +124,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleM
         DatabaseReference ref = database.getReference().child("escort");
 
 // Attach a listener to read the data at your profile reference
+
         ref.addChildEventListener(new ChildEventListener() {
 
 
             @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            public void onChildAdded(@NonNull final DataSnapshot dataSnapshot, @Nullable String s) {
                 try {
                     lng = Double.parseDouble(String.valueOf(dataSnapshot.child("lng").getValue()));
                     lat = Double.parseDouble(String.valueOf(dataSnapshot.child("lat").getValue()));
@@ -128,6 +140,66 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleM
                     mMap.addMarker(new MarkerOptions()
                             .position(new LatLng(lat, lng)).icon(BitmapDescriptorFactory.fromBitmap(smallMarker)).title(name));
 
+                    mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+
+                        @Override
+                        public boolean onMarkerClick(Marker marker) {
+                            DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
+
+                            Query query = reference.child("escort").orderByChild("name").equalTo(marker.getTitle());
+                            query.addChildEventListener(new ChildEventListener() {
+                                @Override
+                                public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                                    NumberFormat format = DecimalFormat.getInstance();
+                                    format.setRoundingMode(RoundingMode.FLOOR);
+                                    format.setMinimumFractionDigits(0);
+                                    mDialog = new Dialog(getContext());
+                                    mDialog.setContentView(R.layout.dialog_details);
+                                    dialog_escort_description = mDialog.findViewById(R.id.dialog_escort_description);
+                                    dialog_escort_price = mDialog.findViewById(R.id.dialog_escort_price);
+                                    dialog_escort_name =mDialog.findViewById(R.id.dialog_escort_name);
+                                    dialog_escort_pic=mDialog.findViewById(R.id.dialog_escort_image);
+                                    dialog_escort_name.setText(""+dataSnapshot.child("name").getValue());
+                                    dialog_escort_description.setText(""+dataSnapshot.child("description").getValue());
+                                    dialog_escort_price.setText("$ "+ dataSnapshot.child("price").getValue()+"");
+                                    Picasso.with(getContext()).load(""+dataSnapshot.child("image").getValue()).into(dialog_escort_pic);
+                                    mDialog.show();
+                                }
+
+                                @Override
+                                public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                                }
+
+                                @Override
+                                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+                                }
+
+                                @Override
+                                public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                                }
+
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                }
+                            });
+
+
+
+
+
+
+
+
+
+
+
+                            return true;
+                        }
+                    });
 
                 } catch (Exception e) {
 
@@ -169,14 +241,21 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleM
     public void onMapReady(GoogleMap googleMap) {
 
         mMap = googleMap;
+        getLocationPermission();
+
+        CameraUpdate point = CameraUpdateFactory.newLatLng(new LatLng(4.5994879, 74.0694694));
+
+// moves camera to coordinates
+        mMap.moveCamera(point);
+
         mMap.setMinZoomPreference(9.0f);
         mMap.setMaxZoomPreference(18.0f);
-
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.setOnMyLocationClickListener(this);
-        getLocationPermission();
+
         updateLocationUI();
         getDeviceLocation();
+
         search();
 
     }
@@ -230,7 +309,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleM
             } else {
                 Log.d("Exception: %s", "nel");
                 mMap.setMyLocationEnabled(false);
-                mMap.getUiSettings().setMyLocationButtonEnabled(true);
+                mMap.getUiSettings().setMyLocationButtonEnabled(false);
                 mLastKnownLocation = null;
                 getLocationPermission();
             }

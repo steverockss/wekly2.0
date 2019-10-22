@@ -4,6 +4,8 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.RadioGroup;
+import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,7 +40,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ListFragment extends Fragment {
     RadioButton all_rb, women_rb, men_rb, trans_rb;
-    Button apply_filter_button;
+    RadioGroup apply_filter_rg;
 
     List<Escort> lstEscort;
     FirebaseRecyclerAdapter<Escort, ViewHolder> adapter;
@@ -63,7 +65,7 @@ public class ListFragment extends Fragment {
         women_rb = v.findViewById(R.id.women_rb);
         men_rb = v.findViewById(R.id.men_rb);
         trans_rb = v.findViewById(R.id.trans_rb);
-        apply_filter_button = v.findViewById(R.id.button_apply_filter);
+        apply_filter_rg = v.findViewById(R.id.filter_rg);
         myrv.setHasFixedSize(true);
         myrv.setItemViewCacheSize(20);
         myrv.setDrawingCacheEnabled(true);
@@ -71,35 +73,35 @@ public class ListFragment extends Fragment {
         mRef = mFirebaseDatabase.getReference().child("escort");
         options = new FirebaseRecyclerOptions.Builder<Escort>().setQuery(mRef, Escort.class).build();
 
-        apply_filter_button.setOnClickListener(new View.OnClickListener() {
 
+        apply_filter_rg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener(){
             @Override
-            public void onClick(View v) {
-                if (all_rb.isChecked()) {
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+
+                if (R.id.all_rb == checkedId) {
                     options = new FirebaseRecyclerOptions.Builder<Escort>().setQuery(mRef, Escort.class).build();
                     setView(options);
 
-                } else if (women_rb.isChecked()) {
+                } else if (R.id.women_rb == checkedId) {
                     mQuery = mRef.orderByChild("sex").equalTo("Mujer");
 
                     options = new FirebaseRecyclerOptions.Builder<Escort>().setQuery(mQuery, Escort.class).build();
                     setView(options);
-                } else if (men_rb.isChecked()) {
+                } else if (R.id.men_rb ==checkedId) {
                     mQuery = mRef.orderByChild("sex").equalTo("Hombre");
 
                     options = new FirebaseRecyclerOptions.Builder<Escort>().setQuery(mQuery, Escort.class).build();
                     setView(options);
-                } else if (trans_rb.isChecked()) {
+                } else if (R.id.trans_rb == checkedId) {
                     mQuery = mRef.orderByChild("sex").equalTo("Trans");
                     options = new FirebaseRecyclerOptions.Builder<Escort>().setQuery(mQuery, Escort.class).build();
                     setView(options);
 
 
                 }
-
             }
-        });
 
+});
 
         setView(options);
         return v;

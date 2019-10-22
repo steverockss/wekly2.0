@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="250dp"
     android:orientation="vertical"
-    android:id="@+id/escort_item">
+    android:id="@+id/escort_item"
+    android:weightSum="4">
 
 
     <ImageView
@@ -33,7 +34,7 @@
         android:id="@+id/escort_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="10dp"
         android:layout_marginBottom="100dp"
         android:text="TextView"
         android:textColor="@color/colorWhite"
@@ -45,7 +46,7 @@
         android:id="@+id/escort_height"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="68dp"
+        android:layout_marginStart="60dp"
         android:layout_marginBottom="60dp"
         android:text="TextView"
         android:textColor="@color/colorWhite"
@@ -56,7 +57,7 @@
         android:id="@+id/escort_weight"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="68dp"
+        android:layout_marginStart="60dp"
         android:layout_marginBottom="40dp"
         android:text="TextView"
         android:textColor="@color/colorWhite"
@@ -67,7 +68,7 @@
         android:id="@+id/escort_age"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="68dp"
+        android:layout_marginStart="60dp"
         android:layout_marginBottom="20dp"
         android:text="TextView"
         android:textColor="@color/colorWhite"
@@ -114,7 +115,6 @@
         android:id="@+id/escort_price"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
         android:layout_marginEnd="5dp"
         android:layout_marginBottom="16dp"
         android:background="@drawable/capsule"
@@ -132,7 +132,7 @@
         android:id="@+id/escort_sex"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="10dp"
         android:layout_marginBottom="80dp"
         android:text="TextView"
         android:textColor="@color/colorWhite"

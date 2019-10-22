@@ -120,7 +120,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         startActivityForResult(
                 AuthUI.getInstance().createSignInIntentBuilder().
                         setAvailableProviders(providers)
-                        .setTheme(R.style.LoginTheme)
                         .build(), MY_REQUEST_CODE
         );
 

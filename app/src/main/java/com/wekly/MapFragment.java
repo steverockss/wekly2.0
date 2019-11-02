@@ -7,6 +7,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+
+import com.android.volley.Request;
+
+import android.graphics.Color;
 import android.graphics.NinePatch;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Address;
@@ -19,6 +23,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,6 +37,7 @@ import androidx.fragment.app.Fragment;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
 import com.android.volley.error.VolleyError;
 import com.android.volley.request.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
@@ -47,6 +53,8 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.ChildEventListener;
@@ -59,6 +67,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 import com.wekly.Model.Escort;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -66,10 +75,17 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+
+import static com.firebase.ui.auth.AuthUI.getApplicationContext;
 
 public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener {
     private GoogleMap mMap;
+
+    JsonObjectRequest jsonObjectRequest;
+    RequestQueue request;
+    Polyline polyline;
     private Location mLastKnownLocation;
     private CameraPosition mCameraPosition;
     private FusedLocationProviderClient mFusedLocationProviderClient;
@@ -79,14 +95,18 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleM
     private boolean mLocationPermissionGranted = false;
     private static final int DEFAULT_ZOOM = 15;
     protected Location lastLocation = new Location("watever");
+    public static List<List<HashMap<String, String>>> routes = new ArrayList<>();
     public Context context = getActivity();
     TextView dialog_escort_name, dialog_escort_price, dialog_escort_description ;
     CircleImageView dialog_escort_pic;
+    Button dialog_escort_hire_button;
     private EditText mSearch;
     private String uInput;
     private RequestQueue requestQueue;
     public double lat = 0;
     public double lng = 0;
+    public double latitude = 0;
+    public  double longitude = 0;
     public String dir = "";
     Dialog mDialog;
 
@@ -143,7 +163,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleM
                     mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
 
                         @Override
-                        public boolean onMarkerClick(Marker marker) {
+                        public boolean onMarkerClick(final Marker marker) {
                             DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
 
                             Query query = reference.child("escort").orderByChild("name").equalTo(marker.getTitle());
@@ -159,11 +179,27 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleM
                                     dialog_escort_price = mDialog.findViewById(R.id.dialog_escort_price);
                                     dialog_escort_name =mDialog.findViewById(R.id.dialog_escort_name);
                                     dialog_escort_pic=mDialog.findViewById(R.id.dialog_escort_image);
+                                    dialog_escort_hire_button = mDialog.findViewById(R.id.dialog_button_hire);
                                     dialog_escort_name.setText(""+dataSnapshot.child("name").getValue());
                                     dialog_escort_description.setText(""+dataSnapshot.child("description").getValue());
                                     dialog_escort_price.setText("$ "+ dataSnapshot.child("price").getValue()+"");
                                     Picasso.with(getContext()).load(""+dataSnapshot.child("image").getValue()).into(dialog_escort_pic);
                                     mDialog.show();
+                                    dialog_escort_hire_button.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View v) {
+                                           // Toast.makeText(getContext(), "Contratada", Toast.LENGTH_SHORT).show();
+                                            if(latitude != 0 && longitude !=0){
+                                                webServiceObtenerRuta(latitude, longitude, marker.getPosition().latitude, marker.getPosition().longitude);
+                                            }
+                                            mDialog.dismiss();
+
+
+
+                                        }
+                                    });
+
+
                                 }
 
                                 @Override
@@ -243,7 +279,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleM
         mMap = googleMap;
         getLocationPermission();
 
-        CameraUpdate point = CameraUpdateFactory.newLatLng(new LatLng(4.5994879, 74.0694694));
+        CameraUpdate point = CameraUpdateFactory.newLatLng(new LatLng(4.5994879, -74.0694694));
 
 // moves camera to coordinates
         mMap.moveCamera(point);
@@ -252,6 +288,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleM
         mMap.setMaxZoomPreference(18.0f);
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.setOnMyLocationClickListener(this);
+
 
         updateLocationUI();
         getDeviceLocation();
@@ -274,8 +311,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleM
                         if (task.isSuccessful()) {
                             // Set the map's camera position to the current location of the device.
                             mLastKnownLocation = (Location) task.getResult();
-                            double latitude = mLastKnownLocation.getLatitude();
-                            double longitude = mLastKnownLocation.getLongitude();
+                             latitude = mLastKnownLocation.getLatitude();
+                             longitude = mLastKnownLocation.getLongitude();
                             LatLng local = new LatLng(latitude, longitude);
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                                     new LatLng(latitude,
@@ -301,7 +338,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleM
             return;
         }
         try {
-            Log.d("Exception: %s", "Intentoooo");
             if (mLocationPermissionGranted) {
                 Log.d("Exception: %s", "Funopma");
                 mMap.setMyLocationEnabled(true);
@@ -399,14 +435,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleM
 
                     uInput = mSearch.getText().toString();
                     Log.d("Info responde", uInput);
-                    /*
-                    Geocoder geocoder = new Geocoder(MapsActivity.this);
 
-
-                        address = geocoder.getFromLocationName(uInput, 1);
-                        double lat = address.get(0).getLatitude();
-                        double lng = address.get(0).getLongitude();
-                        */
                     requestQueue = Volley.newRequestQueue(getActivity().getApplicationContext());
                     uInput = uInput.replace(' ', '+');
 
@@ -495,4 +524,143 @@ public class MapFragment extends Fragment implements OnMapReadyCallback, GoogleM
     public void onMyLocationClick(@NonNull Location location) {
 
     }
+
+    private void webServiceObtenerRuta(double latitudInicial, double longitudInicial, double latitudFinal, double longitudFinal) {
+
+        String url="https://maps.googleapis.com/maps/api/directions/json?origin="+latitudInicial+","+longitudInicial
+                +"&destination="+latitudFinal+","+longitudFinal+"&key=AIzaSyBM2mnz1mpG9_sYh-JPlJP8zqnCXaf8_i8";
+        Log.d("Response",""+latitudInicial+""+longitudInicial+""+latitudFinal+""+longitudFinal);
+        requestQueue = Volley.newRequestQueue(getActivity().getApplicationContext());
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                //Este método PARSEA el JSONObject que retorna del API de Rutas de Google devolviendo
+                //una lista del lista de HashMap Strings con el listado de Coordenadas de Lat y Long,
+                //con la cual se podrá dibujar pollinas que describan la ruta entre 2 puntos.
+                JSONArray jRoutes = null;
+                JSONArray jLegs = null;
+                JSONArray jSteps = null;
+
+                try {
+
+                    jRoutes = response.getJSONArray("routes");
+
+                    /** Traversing all routes */
+                    for(int i=0;i<jRoutes.length();i++){
+                        jLegs = ( (JSONObject)jRoutes.get(i)).getJSONArray("legs");
+                        List<HashMap<String, String>> path = new ArrayList<HashMap<String, String>>();
+
+                        /** Traversing all legs */
+                        for(int j=0;j<jLegs.length();j++){
+                            jSteps = ( (JSONObject)jLegs.get(j)).getJSONArray("steps");
+
+                            /** Traversing all steps */
+                            for(int k=0;k<jSteps.length();k++){
+                                String polyline = "";
+                                polyline = (String)((JSONObject)((JSONObject)jSteps.get(k)).get("polyline")).get("points");
+                                List<LatLng> list = decodePoly(polyline);
+
+                                /** Traversing all points */
+                                for(int l=0;l<list.size();l++){
+                                    HashMap<String, String> hm = new HashMap<String, String>();
+                                    hm.put("lat", Double.toString(((LatLng)list.get(l)).latitude) );
+                                    hm.put("lng", Double.toString(((LatLng)list.get(l)).longitude) );
+                                    path.add(hm);
+                                }
+                            }
+                            routes.add(path);
+
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }catch (Exception e){
+                }
+                LatLng center = null;
+                ArrayList<LatLng> points = null;
+                PolylineOptions lineOptions = null;
+                for(int i=0;i<routes.size();i++){
+                    points = new ArrayList<LatLng>();
+                    lineOptions = new PolylineOptions();
+
+                    // Obteniendo el detalle de la ruta
+                    List<HashMap<String, String>> path = routes.get(i);
+
+                    // Obteniendo todos los puntos y/o coordenadas de la ruta
+                    for(int j=0;j<path.size();j++){
+                        HashMap<String,String> point = path.get(j);
+
+                        double lat = Double.parseDouble(point.get("lat"));
+                        double lng = Double.parseDouble(point.get("lng"));
+                        LatLng position = new LatLng(lat, lng);
+
+                        if (center == null) {
+                            //Obtengo la 1ra coordenada para centrar el mapa en la misma.
+                            center = new LatLng(lat, lng);
+                        }
+                        points.add(position);
+                    }
+                    // Agregamos todos los puntos en la ruta al objeto LineOptions
+                    lineOptions.addAll(points);
+                    //Definimos el grosor de las Polilíneas
+                    lineOptions.width(5);
+                    //Definimos el color de la Polilíneas
+                    lineOptions.color(Color.rgb(174,47,66));
+                }
+                 if(polyline!= null){
+                     polyline.remove();
+                 }
+                 polyline = mMap.addPolyline(lineOptions);
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(context, "No se puede conectar "+error.toString(), Toast.LENGTH_LONG).show();
+                System.out.println();
+                Log.d("ERROR: ", error.toString());
+            }
+        }
+        );
+
+        requestQueue.add(request);
+
+
+    }
+
+
+    private List<LatLng> decodePoly(String encoded) {
+
+        List<LatLng> poly = new ArrayList<LatLng>();
+        int index = 0, len = encoded.length();
+        int lat = 0, lng = 0;
+
+        while (index < len) {
+            int b, shift = 0, result = 0;
+            do {
+                b = encoded.charAt(index++) - 63;
+                result |= (b & 0x1f) << shift;
+                shift += 5;
+            } while (b >= 0x20);
+            int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+            lat += dlat;
+
+            shift = 0;
+            result = 0;
+            do {
+                b = encoded.charAt(index++) - 63;
+                result |= (b & 0x1f) << shift;
+                shift += 5;
+            } while (b >= 0x20);
+            int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+            lng += dlng;
+
+            LatLng p = new LatLng((((double) lat / 1E5)),
+                    (((double) lng / 1E5)));
+            poly.add(p);
+        }
+
+        return poly;
+    }
+
 }

@@ -55,9 +55,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
 //        ref.child("user").child("uid").setValue(user.getUid());
-        if(user == null) {
+        if (user == null) {
             showSignInOptions();
-        }else {
+        } else {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new MapFragment()).commit();
         }
     }
@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 });
                 break;
             case R.id.nav_list:
-                  getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ListFragment()).commit();
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ListFragment()).commit();
 
                 break;
             case R.id.nav_map:
@@ -101,7 +101,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 //Intent in = new Intent(MainActivity.this, MapsActivity.class);
                 //startActivity(in);
                 break;
-
 
 
             default:
@@ -118,12 +117,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 new AuthUI.IdpConfig.GoogleBuilder().build()
         );
         startActivityForResult(
-                AuthUI.getInstance().createSignInIntentBuilder().
-                        setAvailableProviders(providers)
+                AuthUI.getInstance().createSignInIntentBuilder()
+                        .setAvailableProviders(providers)
+                        .setLogo(R.drawable.wekly)
+
                         .build(), MY_REQUEST_CODE
         );
 
     }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
